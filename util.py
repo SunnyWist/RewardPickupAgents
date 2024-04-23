@@ -1,0 +1,125 @@
+import numpy as np
+import random
+from dataclasses import dataclass
+from typing import List, Dict, Union
+
+from World import Node, get_adjacent_nodes
+
+OBSTACLE = 1
+PASS_POINT = 0
+
+
+def get_manhattan_distance(node1: Node, node2: Node) -> int:
+    """2ノード間のマンハッタン距離を計算する関数
+
+    Args:
+        node1 (Node): ノード1
+        node2 (Node): ノード2
+
+    Returns:
+        int: マンハッタン距離
+    """
+    return abs(node1.x - node2.x) + abs(node1.y - node2.y)
+
+
+def get_euclidean_distance(node1: Node, node2: Node) -> float:
+    """2ノード間のユークリッド距離を計算する関数
+
+    Args:
+        node1 (Node): ノード1
+        node2 (Node): ノード2
+
+    Returns:
+        float: ユークリッド距離
+    """
+    return ((node1.x - node2.x) ** 2 + (node1.y - node2.y) ** 2) ** 0.5
+
+
+def get_astar_path(env: np.ndarray, node1: Node, node2: Node) -> Union[List[Node], None]:
+    """2ノード間の最短経路を返す関数
+
+    Args:
+        env (np.ndarray): 障害物かどうかを表すバイナリ行列(障害物ならOBSTACLE, 通路ならPASS_POINT)
+        node1 (Node): ノード1
+        node2 (Node): ノード2
+
+    Returns:
+        List[Node]: 経路
+    """
+
+    class AStarNode:
+        def __init__(self, node: Node, g: int, h: float, trajectory: List[Node] = []):
+            self.node = node
+            self.g = g
+            self.h = h
+            self.trajectory: List[Node] = trajectory
+
+        def get_f(self):
+            return self.g + self.h
+
+        def __eq__(self, other):
+            return self.node == other.node
+
+        def __lt__(self, other):
+            return self.get_f() < other.get_f()
+
+    if env[node1.x, node1.y] == OBSTACLE or env[node2.x, node2.y] == OBSTACLE:
+        return None
+
+    new_node1 = AStarNode(node1, 0, get_manhattan_distance(node1, node2))
+
+    open_list: List[AStarNode] = [new_node1]
+    close_list: List[AStarNode] = []
+    while len(open_list) > 0:
+        current_node = open_list.pop(0)
+        close_list.append(current_node)
+        if current_node.node == node2:
+            return [*current_node.trajectory, node2]
+        for new_node in get_adjacent_nodes(current_node.node):
+            next_node = AStarNode(
+                new_node,
+                current_node.g + 1,
+                get_manhattan_distance(new_node, node2),
+                [*current_node.trajectory, current_node.node],
+            )
+            if (
+                next_node.node.x < 0
+                or next_node.node.x >= env.shape[0]
+                or next_node.node.y < 0
+                or next_node.node.y >= env.shape[1]
+            ):
+                continue
+            if env[next_node.node.x, next_node.node.y] == OBSTACLE:
+                continue
+            if next_node in close_list:
+                index = close_list.index(next_node)
+                if close_list[index] > next_node:
+                    close_list.pop(index)
+                    open_list.append(next_node)
+                else:
+                    continue
+            if next_node in open_list:
+                index = open_list.index(next_node)
+                if open_list[index] > next_node:
+                    open_list[index] = next_node
+            else:
+                open_list.append(next_node)
+        open_list.sort()
+    return None
+
+
+def get_astar_distance(env: np.ndarray, node1: Node, node2: Node) -> int:
+    """2ノード間の最短距離をA*探索で計算する関数
+
+    Args:
+        env (np.ndarray): 障害物かどうかを表すバイナリ行列(障害物ならOBSTACLE, 通路ならPASS_POINT)
+        node1 (Node): ノード1
+        node2 (Node): ノード2
+
+    Returns:
+        int: 最短距離
+    """
+    path = get_astar_path(env, node1, node2)
+    if path is None:
+        return -1
+    return len(path) - 1
