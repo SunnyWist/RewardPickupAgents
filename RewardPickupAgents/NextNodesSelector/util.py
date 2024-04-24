@@ -3,10 +3,19 @@ import random
 from dataclasses import dataclass
 from typing import List, Dict, Union
 
-from World import Node, get_adjacent_nodes
+from ..World import Node, Environment
 
-OBSTACLE = 1
-PASS_POINT = 0
+
+def get_adjacent_nodes(node: Node) -> List[Node]:
+    """ノードの上下左右の隣接ノードを取得する関数
+
+    Args:
+        node (Node): 基準となるノード
+
+    Returns:
+        List[Node]: 隣接ノードのリスト
+    """
+    return [Node(node.x + d[0], node.y + d[1]) for d in [(0, 1), (0, -1), (1, 0), (-1, 0)]]
 
 
 def get_manhattan_distance(node1: Node, node2: Node) -> int:
@@ -35,11 +44,11 @@ def get_euclidean_distance(node1: Node, node2: Node) -> float:
     return ((node1.x - node2.x) ** 2 + (node1.y - node2.y) ** 2) ** 0.5
 
 
-def get_astar_path(env: np.ndarray, node1: Node, node2: Node) -> Union[List[Node], None]:
+def get_astar_path(env: Environment, node1: Node, node2: Node) -> Union[List[Node], None]:
     """2ノード間の最短経路を返す関数
 
     Args:
-        env (np.ndarray): 障害物かどうかを表すバイナリ行列(障害物ならOBSTACLE, 通路ならPASS_POINT)
+        env (Environment): 障害物かどうかを表すバイナリ行列(障害物ならOBSTACLE, 通路ならPASS_POINT)
         node1 (Node): ノード1
         node2 (Node): ノード2
 
@@ -63,7 +72,7 @@ def get_astar_path(env: np.ndarray, node1: Node, node2: Node) -> Union[List[Node
         def __lt__(self, other):
             return self.get_f() < other.get_f()
 
-    if env[node1.x, node1.y] == OBSTACLE or env[node2.x, node2.y] == OBSTACLE:
+    if env.is_obstacle(node1) or env.is_obstacle(node2):
         return None
 
     new_node1 = AStarNode(node1, 0, get_manhattan_distance(node1, node2))
@@ -82,14 +91,7 @@ def get_astar_path(env: np.ndarray, node1: Node, node2: Node) -> Union[List[Node
                 get_manhattan_distance(new_node, node2),
                 [*current_node.trajectory, current_node.node],
             )
-            if (
-                next_node.node.x < 0
-                or next_node.node.x >= env.shape[0]
-                or next_node.node.y < 0
-                or next_node.node.y >= env.shape[1]
-            ):
-                continue
-            if env[next_node.node.x, next_node.node.y] == OBSTACLE:
+            if not env.check_valid_node(next_node.node):
                 continue
             if next_node in close_list:
                 index = close_list.index(next_node)
@@ -108,11 +110,11 @@ def get_astar_path(env: np.ndarray, node1: Node, node2: Node) -> Union[List[Node
     return None
 
 
-def get_astar_distance(env: np.ndarray, node1: Node, node2: Node) -> int:
+def get_astar_distance(env: Environment, node1: Node, node2: Node) -> int:
     """2ノード間の最短距離をA*探索で計算する関数
 
     Args:
-        env (np.ndarray): 障害物かどうかを表すバイナリ行列(障害物ならOBSTACLE, 通路ならPASS_POINT)
+        env (Environment): 障害物かどうかを表すバイナリ行列(障害物ならOBSTACLE, 通路ならPASS_POINT)
         node1 (Node): ノード1
         node2 (Node): ノード2
 

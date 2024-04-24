@@ -3,17 +3,13 @@ import random
 from dataclasses import dataclass
 from typing import List, Dict, Union
 
-OBSTACLE = 1
-PASS_POINT = 0
-
-AGENT_STR = "a"
-STORE_POINT_STR = "s"
-
-MAXIMUM_REWARD = 3
+from .parameter import *
 
 
 @dataclass
 class Node:
+    """マップのノード(セル)を表す構造体"""
+
     x: int
     y: int
 
@@ -24,19 +20,15 @@ class Node:
         return Node(self.x + other.x, self.y + other.y)
 
 
-def get_adjacent_nodes(node: Node) -> List[Node]:
-    """ノードの上下左右の隣接ノードを取得する関数
+class Agent:
+    """マップ上で移動するエージェントを表すクラス
 
     Args:
-        node (Node): 基準となるノード
-
-    Returns:
-        List[Node]: 隣接ノードのリスト
+        agent_id (int): エージェントのID (0...n-1)
+        maximum_reward (int): エージェントが運搬できる最大の報酬
+        node (Node): エージェントの現在位置
     """
-    return [Node(node.x + d[0], node.y + d[1]) for d in [(0, 1), (0, -1), (1, 0), (-1, 0)]]
 
-
-class Agent:
     def __init__(self, agent_id: int, maximum_reward: int, node: Node):
         self.agent_id = agent_id
         self.maximum_reward = maximum_reward
@@ -44,19 +36,45 @@ class Agent:
         self.owned_reward = 0
 
     def set_node(self, node: Node):
+        """エージェントの位置を更新するメソッド
+
+        Args:
+            node (Node): 新しいエージェントの位置
+        """
         self.node = node
 
     def get_id(self) -> int:
+        """エージェントのIDを取得するメソッド
+
+        Returns:
+            int: エージェントのID
+        """
         return self.agent_id
 
     def get_maximum_reward(self) -> int:
+        """エージェントが運べる最大の報酬を取得するメソッド
+
+        Returns:
+            int: エージェントが運べる最大の報酬
+        """
         return self.maximum_reward
 
     def get_node(self) -> Node:
+        """エージェントの現在位置を取得するメソッド
+
+        Returns:
+            Node: エージェントの現在位置
+        """
         return self.node
 
 
 class StorePoint:
+    """報酬を保管する場所を表すクラス
+
+    Args:
+        node (Node): 報酬を保管する場所の位置
+    """
+
     def __init__(self, node: Node):
         self.node = node
         self.stored_reward = 0
@@ -90,7 +108,7 @@ class Environment:
         return self.width, self.height
 
     def is_obstacle(self, node: Node):
-        return self.obstacle_array[node.x, node.y] == OBSTACLE
+        return self.obstacle_array[node.x, node.y] == OBSTACLE_STR
 
     def check_valid_node(self, node: Node) -> bool:
         if not (0 <= node.x < self.width) or not (0 <= node.y < self.height):
@@ -131,10 +149,10 @@ class World:
                 line = f.readline()
                 row_list = line.strip().split(",")
                 for j, value in enumerate(row_list):
-                    if value == str(PASS_POINT):
-                        obstacle_array[i, j] = int(value)
-                    elif value == str(OBSTACLE):
-                        obstacle_array[i, j] = int(value)
+                    if value == str(PASSABLE_STR):
+                        obstacle_array[i, j] = PASSABLE_NUM
+                    elif value == str(OBSTACLE_STR):
+                        obstacle_array[i, j] = OBSTACLE_NUM
                     elif value == AGENT_STR:
                         self.agents.append(Agent(self.agents_count, MAXIMUM_REWARD, Node(i, j)))
                         self.agents_count += 1
