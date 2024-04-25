@@ -22,6 +22,7 @@ class RandomWalk(NextNodesSelector):
             Node(0, 0),
         ]  # エージェントは上下左右に移動するか、その場に留まる
         for agent in world.agents:
-            selected_action = random.choice(action_list)
-            return_dict[agent.agent_id] = agent.node + selected_action
+            valid_action_list = world.get_agent_valid_next_nodes(agent)
+            selected_action = random.choice(valid_action_list)
+            return_dict[agent.agent_id] = selected_action
         return return_dict

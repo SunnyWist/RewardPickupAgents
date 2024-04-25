@@ -15,4 +15,4 @@ REWARD_CSV_FILE_PATH = "reward_probability_data/reward1.csv"
 # シミュレーションを行うステップ数
 MAX_TIMESTEP = 100
 # ターミナルにマップを表示するかどうか
-PRINT_MAP_IN_TEMINAL = True
+PRINT_MAP_IN_TEMINAL = False

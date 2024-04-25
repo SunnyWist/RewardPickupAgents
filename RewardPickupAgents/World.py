@@ -290,6 +290,41 @@ class World:
                         nearest_node = reward_node
         return nearest_node
 
+    def get_adjacent_nodes(self, node: Node) -> List[Node]:
+        """指定したノードの隣接するノードのリストを取得するメソッド
+
+        Args:
+            node (Node): 対象となるノード
+
+        Returns:
+            List[Node]: 指定したノードの隣接するノードのリスト
+        """
+        action_list: List[Node] = [
+            Node(0, 1),
+            Node(0, -1),
+            Node(1, 0),
+            Node(-1, 0),
+        ]
+        return [node + action for action in action_list]
+
+    def get_agent_valid_next_nodes(self, agent: Agent) -> List[Node]:
+        """エージェントが次に移動できる有効なノードのリストを取得するメソッド
+
+        Args:
+            agent (Agent): 対象となるエージェント
+
+        Returns:
+            List[Node]: エージェントが次に移動できる有効なノードのリスト
+        """
+        current_node = agent.get_node()
+        next_nodes = self.get_adjacent_nodes(current_node)
+        next_nodes.append(current_node)
+        valid_next_nodes: List[Node] = []
+        for node in next_nodes:
+            if self.environment.check_valid_node(node) and not self.get_agent_with_node(node):
+                valid_next_nodes.append(node)
+        return valid_next_nodes
+
     def print_map_state(self):
         width, height = self.environment.get_environment_size()
         for r in range(width):

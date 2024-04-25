@@ -8,7 +8,7 @@ from .World import World
 from .parameter import *
 
 """ 以下を変更してください """
-from .NextNodesSelector.AStarPath import AStarPath as NextNodesSelector
+from .NextNodesSelector.RandomWalk import RandomWalk as NextNodesSelector
 
 """ 以上を変更してください """
 
@@ -31,7 +31,11 @@ def main():
         new_node_dict = next_nodes_selector.get_next_nodes(world)
         for i in range(len(world.agents)):
             if not world.environment.check_valid_node(new_node_dict[i]):
-                raise ValueError("エージェントが範囲外もしくは障害物に移動しようとしています。")
+                raise ValueError(
+                    "エージェントが範囲外もしくは障害物に移動しようとしています。 Agent ID: {}, Node: {}".format(
+                        i, new_node_dict[i]
+                    )
+                )
             if world.get_agent_with_node(new_node_dict[i]):
                 collision_count += 1
                 continue
