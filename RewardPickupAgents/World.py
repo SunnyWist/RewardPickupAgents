@@ -8,16 +8,28 @@ from .parameter import *
 
 @dataclass
 class Node:
-    """マップのノード(セル)を表す構造体"""
+    """マップのノード(セル)を表す構造体
+
+    等価比較(==)と加算(+)、減算(-)をサポートしている
+    """
 
     x: int
     y: int
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Node):
+            return False
         return self.x == other.x and self.y == other.y
 
-    def __add__(self, other):
+    def __add__(self, other) -> "Node":
+        if not isinstance(other, Node):
+            raise ValueError("Addition is only supported for Node")
         return Node(self.x + other.x, self.y + other.y)
+
+    def __sub__(self, other) -> "Node":
+        if not isinstance(other, Node):
+            raise ValueError("Subtraction is only supported for Node")
+        return Node(self.x - other.x, self.y - other.y)
 
 
 class Agent:
@@ -104,14 +116,46 @@ class Environment:
     def set_reward_probability_array(self, reward_probability_array: np.ndarray):
         self.reward_probability_array = reward_probability_array
 
-    def get_environment_size(self):
+    def get_environment_size(self) -> tuple[int, int]:
+        """環境の横幅と縦幅を取得するメソッド
+
+        Returns:
+            tuple[int, int]: 環境の横幅と縦幅
+        """
         return self.width, self.height
 
-    def is_obstacle(self, node: Node):
-        return self.obstacle_array[node.x, node.y] == OBSTACLE_STR
+    def is_obstacle(self, node: Node) -> bool:
+        """指定したノードが障害物かどうかを判定するメソッド
+
+        Args:
+            node (Node): 判定するノード
+
+        Returns:
+            bool: 指定したノードが障害物の場合はTrue, それ以外はFalse
+        """
+        return self.obstacle_array[node.x, node.y] == 1
+
+    def is_in_environment(self, node: Node) -> bool:
+        """指定したノードが環境内にあるかどうかを判定するメソッド
+
+        Args:
+            node (Node): 判定するノード
+
+        Returns:
+            bool: 指定したノードが環境内にある場合はTrue, それ以外はFalse
+        """
+        return 0 <= node.x < self.width and 0 <= node.y < self.height
 
     def check_valid_node(self, node: Node) -> bool:
-        if not (0 <= node.x < self.width) or not (0 <= node.y < self.height):
+        """指定したノードが有効であるか(環境内にあり、障害物でない)を判定するメソッド
+
+        Args:
+            node (Node): 判定するノード
+
+        Returns:
+            bool: 指定したノードが環境内にあり、障害物でない場合はTrue, それ以外はFalse
+        """
+        if not self.is_in_environment(node):
             return False
         if self.is_obstacle(node):
             return False
@@ -122,9 +166,9 @@ class Environment:
             for c in range(self.height):
                 print_str = ""
                 if self.is_obstacle(Node(r, c)):
-                    print_str = "■"
+                    print_str = MAP_STATE.OBSTACLE
                 else:
-                    print_str = "□"
+                    print_str = MAP_STATE.PASS_POINT
                 print(print_str.rjust(2), end=" ")
             print()
 
@@ -149,16 +193,18 @@ class World:
                 line = f.readline()
                 row_list = line.strip().split(",")
                 for j, value in enumerate(row_list):
-                    if value == str(PASSABLE_STR):
-                        obstacle_array[i, j] = PASSABLE_NUM
-                    elif value == str(OBSTACLE_STR):
-                        obstacle_array[i, j] = OBSTACLE_NUM
-                    elif value == AGENT_STR:
+                    if value == MAP_STATE.OBSTACLE:
+                        obstacle_array[i, j] = 1
+                    elif value == MAP_STATE.PASS_POINT:
+                        obstacle_array[i, j] = 0
+                    elif value == MAP_STATE.AGENT:
                         self.agents.append(Agent(self.agents_count, MAXIMUM_REWARD, Node(i, j)))
                         self.agents_count += 1
-                    elif value == STORE_POINT_STR:
+                    elif value == MAP_STATE.STORE_POINT:
                         self.store_points.append(StorePoint(Node(i, j)))
                         self.store_points_count += 1
+                    else:
+                        raise ValueError("Invalid value in the map")
             self.environment.set_obstacle_array(obstacle_array)
 
         with open(reward_probability_file, "r") as f:
@@ -176,6 +222,7 @@ class World:
         self.reward_array = np.zeros((width, height))
 
     def update_reward(self):
+        """確率に応じて報酬を生成するメソッド"""
         for r in range(self.environment.width):
             for c in range(self.environment.height):
                 node = Node(r, c)
@@ -186,7 +233,7 @@ class World:
                 if random.random() < prob:
                     self.reward_array[r, c] = 1
 
-    def earn_reward(self, agent: Agent):
+    def earn_reward(self, agent: Agent) -> int:
         reward = self.reward_array[agent.get_node().x, agent.get_node().y]
         if agent.get_maximum_reward() - agent.owned_reward < reward:
             reward = agent.get_maximum_reward() - agent.owned_reward
@@ -195,18 +242,42 @@ class World:
         return reward
 
     def get_agent_with_node(self, node: Node) -> Union[Agent, None]:
+        """指定したノードにいるエージェントを取得するメソッド
+
+        Args:
+            node (Node): 対象となるノード
+
+        Returns:
+            Union[Agent, None]: 指定したノードにいるエージェントが存在する場合はそのエージェント, それ以外はNone
+        """
         for agent in self.agents:
             if agent.get_node() == node:
                 return agent
         return None
 
     def get_store_point_with_node(self, node: Node) -> Union[StorePoint, None]:
+        """指定したノードにある報酬を保管する場所を取得するメソッド
+
+        Args:
+            node (Node): 対象となるノード
+
+        Returns:
+            Union[StorePoint, None]: 指定したノードにある報酬を保管する場所が存在する場合はその場所, それ以外はNone
+        """
         for store_point in self.store_points:
             if store_point.get_node() == node:
                 return store_point
         return None
 
     def get_nearest_reward_node(self, node: Node) -> Union[Node, None]:
+        """指定したノードに最も近い報酬があるノードを取得するメソッド
+
+        Args:
+            node (Node): 対象となるノード
+
+        Returns:
+            Union[Node, None]: 指定したノードに最も近い報酬があるノードが存在する場合はそのノード, それ以外はNone
+        """
         min_distance = 10000
         nearest_node = None
         for r in range(self.environment.width):
@@ -229,20 +300,20 @@ class World:
                 color_start_str = ""
                 color_end_str = ""
                 if agent:
-                    print_str = AGENT_STR
+                    print_str = MAP_STATE.AGENT
                     color_start_str = "\033[32m"
                     color_end_str = "\033[0m"
                 elif store_point:
-                    print_str = "s"
+                    print_str = MAP_STATE.STORE_POINT
                     color_start_str = "\033[34m"
                     color_end_str = "\033[0m"
                 elif self.environment.is_obstacle(Node(r, c)):
-                    print_str = "■"
+                    print_str = MAP_STATE.OBSTACLE
                 elif self.reward_array[r, c] > 0:
                     print_str = "★"
                     color_start_str = "\033[33m"
                     color_end_str = "\033[0m"
                 else:
-                    print_str = "□"
+                    print_str = MAP_STATE.PASS_POINT
                 print(color_start_str + print_str.rjust(2) + color_end_str, end=" ")
             print()

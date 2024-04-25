@@ -53,7 +53,7 @@ def get_astar_path(env: Environment, node1: Node, node2: Node) -> Union[List[Nod
         node2 (Node): ノード2
 
     Returns:
-        List[Node]: 経路
+        List[Node]: 経路、経路が存在しない場合はNone
     """
 
     class AStarNode:
@@ -119,7 +119,7 @@ def get_astar_distance(env: Environment, node1: Node, node2: Node) -> int:
         node2 (Node): ノード2
 
     Returns:
-        int: 最短距離
+        int: 最短距離、経路が存在しない場合は-1
     """
     path = get_astar_path(env, node1, node2)
     if path is None:

@@ -15,16 +15,17 @@ from .NextNodesSelector.AStarPath import AStarPath as NextNodesSelector
 
 def main():
     world = World(OBSTACLE_CSV_FILE_PATH, REWARD_CSV_FILE_PATH)
-    print(world.environment.get_environment_size())
+    print("(width, height) = ", world.environment.get_environment_size())
     world.print_map_state()
     next_nodes_selector = NextNodesSelector()
 
-    step = 0
-    agents_owned_reward = 0
-    stored_reward = 0
-    collision_count = 0
+    step: int = 0
+    agents_owned_reward: int = 0
+    stored_reward: int = 0
+    collision_count: int = 0
 
     while step < MAX_TIMESTEP:
+        # 報酬を出現させる
         world.update_reward()
         # エージェントの移動
         new_node_dict = next_nodes_selector.get_next_nodes(world)
@@ -47,6 +48,7 @@ def main():
                 store_point.store_reward(agent.owned_reward)
                 agent.owned_reward = 0
 
+        # 後処理
         step += 1
         agents_owned_reward = sum([agent.owned_reward for agent in world.agents])
         stored_reward = sum([store_point.stored_reward for store_point in world.store_points])
