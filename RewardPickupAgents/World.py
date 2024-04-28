@@ -100,12 +100,27 @@ class StorePoint:
         self.stored_reward = 0
 
     def store_reward(self, reward: int):
+        """報酬を保管するメソッド
+
+        Args:
+            reward (int): 保管する報酬
+        """
         self.stored_reward += reward
 
     def get_node(self) -> Node:
+        """報酬を保管する場所の位置を取得するメソッド
+
+        Returns:
+            Node: 報酬を保管する場所の位置
+        """
         return self.node
 
     def get_stored_reward(self) -> int:
+        """保管されている報酬を取得するメソッド
+
+        Returns:
+            int: 保管されている報酬
+        """
         return self.stored_reward
 
 
@@ -154,7 +169,7 @@ class Environment:
         """
         return 0 <= node.x < self.width and 0 <= node.y < self.height
 
-    def check_valid_node(self, node: Node) -> bool:
+    def is_valid_node(self, node: Node) -> bool:
         """指定したノードが有効であるか(環境内にあり、障害物でない)を判定するメソッド
 
         Args:
@@ -182,6 +197,8 @@ class Environment:
 
 
 class World:
+    """エージェントと報酬の保管庫の情報、および環境の状況を保持するクラス"""
+
     def __init__(self, obstacle_file: str, reward_probability_file: str):
         self.environment: Environment
         self.agents: List[Agent] = []
@@ -287,7 +304,7 @@ class World:
         """
         return self.environment.is_in_environment(node)
 
-    def check_valid_node(self, node: Node) -> bool:
+    def is_valid_node(self, node: Node) -> bool:
         """指定したノードが有効であるか(環境内にあり、障害物でない)を判定するメソッド
 
         Args:
@@ -296,7 +313,7 @@ class World:
         Returns:
             bool: 指定したノードが環境内にあり、障害物でない場合はTrue, それ以外はFalse
         """
-        return self.environment.check_valid_node(node)
+        return self.environment.is_valid_node(node)
 
     def get_agents_list(self) -> List[Agent]:
         """エージェントのリストを取得するメソッド
@@ -358,6 +375,25 @@ class World:
                 return store_point
         return None
 
+    def get_reward_array(self) -> np.ndarray:
+        """現在の報酬が配置されているノードを記録した配列を取得するメソッド
+
+        Returns:
+            np.ndarray: 報酬の配列
+        """
+        return self.reward_array
+
+    def has_reward(self, node: Node) -> bool:
+        """指定したノードに報酬があるかどうかを判定するメソッド
+
+        Args:
+            node (Node): 判定するノード
+
+        Returns:
+            bool: 指定したノードに報酬がある場合はTrue, それ以外はFalse
+        """
+        return self.reward_array[node.x, node.y] > 0
+
     def get_nearest_reward_node(self, node: Node) -> Union[Node, None]:
         """指定したノードに最も近い報酬があるノードを取得するメソッド
 
@@ -396,23 +432,29 @@ class World:
         ]
         return [node + action for action in action_list]
 
-    def get_agent_valid_next_nodes(self, agent: Agent) -> List[Node]:
-        """エージェントが次に移動できる有効なノードのリストを取得するメソッド
+    def get_valid_next_actions_for_agents(self, agent: Agent) -> List[Node]:
+        """エージェントが次に選択できる有効な行動(Node)のリストを取得するメソッド
 
         Args:
             agent (Agent): 対象となるエージェント
 
         Returns:
-            List[Node]: エージェントが次に移動できる有効なノードのリスト
+            List[Node]: エージェントが次に選択できる有効な行動(Node)のリスト
         """
         current_node = agent.get_node()
-        next_nodes = self.get_adjacent_nodes(current_node)
-        next_nodes.append(current_node)
-        valid_next_nodes: List[Node] = []
-        for node in next_nodes:
-            if self.environment.check_valid_node(node) and not self.get_agent_with_node(node):
-                valid_next_nodes.append(node)
-        return valid_next_nodes
+        actions_list = [
+            Node(0, 1),
+            Node(0, -1),
+            Node(1, 0),
+            Node(-1, 0),
+            Node(0, 0),
+        ]
+        valid_next_actions: List[Node] = []
+        for action in actions_list:
+            next_node = current_node + action
+            if self.is_valid_node(next_node):
+                valid_next_actions.append(action)
+        return valid_next_actions
 
     def print_map_state(self):
         width, height = self.environment.get_environment_size()

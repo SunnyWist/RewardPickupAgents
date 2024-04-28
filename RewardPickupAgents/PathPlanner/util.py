@@ -94,7 +94,7 @@ def get_astar_path(world: World, node1: Node, node2: Node) -> Union[List[Node], 
                 get_manhattan_distance(new_node, node2),
                 [*current_node.trajectory, current_node.node],
             )
-            if not env.check_valid_node(next_node.node):
+            if not env.is_valid_node(next_node.node):
                 continue
             if next_node in close_list:
                 index = close_list.index(next_node)

@@ -8,24 +8,17 @@ from dataclasses import dataclass
 from typing import List, Dict, Union
 
 from ..World import Node, Agent, World
-from .PathPlannerAbstract import PathPlanner
+from .PathPlannerAbstract import PathPlannerAbstract
 from .util import *
 
 
-class AStarPath(PathPlanner):
+class AStarPath(PathPlannerAbstract):
     def __init__(self):
         # エージェントが向かうノードを格納するdict
         self.agent_forward_nodes: Dict[int, Union[Node, None]] = {}  # get_id(): Node
 
-    def get_next_nodes(self, world: World) -> Dict[int, Node]:
+    def get_next_actions_for_agents(self, world: World) -> Dict[int, Node]:
         return_dict: Dict[int, Node] = {}  # get_id(): Node
-        action_list: List[Node] = [
-            Node(0, 1),
-            Node(0, -1),
-            Node(1, 0),
-            Node(-1, 0),
-            Node(0, 0),
-        ]  # エージェントは上下左右に移動するか、その場に留まる
 
         agents = world.get_agents_list()
 
@@ -54,14 +47,16 @@ class AStarPath(PathPlanner):
                     nearest_reward_node = world.get_nearest_reward_node(agent.get_node())
                     self.agent_forward_nodes[agent.get_id()] = nearest_reward_node
 
-        # それぞれのエージェントに対してA*探索を行い、次のノードを取得
+        # それぞれのエージェントに対してA*探索を行い、次の行動を選択
         for agent in agents:
             agent_forward_node = self.agent_forward_nodes[agent.get_id()]
             if agent_forward_node is None:
+                return_dict[agent.get_id()] = Node(0, 0)
                 continue
             best_path = get_astar_path(world, agent.get_node(), agent_forward_node)
             if best_path is None:
                 raise ValueError
-            return_dict[agent.get_id()] = best_path[1]
+            next_node = best_path[1]
+            return_dict[agent.get_id()] = next_node - agent.get_node()
 
         return return_dict

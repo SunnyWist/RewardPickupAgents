@@ -59,6 +59,7 @@
     - マップのサイズ: `9x9`
     - 報酬の出てくる確率: 未定
 - 以上のパラメータの設定に依らないような経路計画プログラムを作成することが望ましい。
+- また実際にかかる計算時間が短いほどよい。
 
 ## 6. その他
-- ランダムウォーク`RewardPickupAgents/PathPlanner/RandomWalk.py`による評価値は8~25くらいです。
+- ランダムウォーク`RewardPickupAgents/PathPlanner/RandomWalk.py`による評価値は8~15くらいです。
