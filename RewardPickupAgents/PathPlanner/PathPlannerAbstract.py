@@ -7,7 +7,7 @@ from abc import ABCMeta, abstractmethod
 from ..World import Node, Agent, World
 
 
-class NextNodesSelector(metaclass=ABCMeta):
+class PathPlanner(metaclass=ABCMeta):
     """次のノードを選ぶためのメソッド(get_next_nodes)を持つ抽象クラス
 
     Args:

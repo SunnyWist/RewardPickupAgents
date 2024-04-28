@@ -8,7 +8,7 @@ from .World import World
 from .parameter import *
 
 """ 以下を変更してください """
-from .NextNodesSelector.RandomWalk import RandomWalk as NextNodesSelector
+from .PathPlanner.RandomWalk import RandomWalk as PathPlanner
 
 """ 以上を変更してください """
 
@@ -17,7 +17,7 @@ def main():
     world = World(OBSTACLE_CSV_FILE_PATH, REWARD_CSV_FILE_PATH)
     print("(width, height) = ", world.environment.get_environment_size())
     world.print_map_state()
-    next_nodes_selector = NextNodesSelector()
+    next_nodes_selector = PathPlanner()
 
     step: int = 0
     agents_owned_reward: int = 0

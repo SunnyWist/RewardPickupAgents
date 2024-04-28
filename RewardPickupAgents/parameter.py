@@ -6,6 +6,7 @@ class MAP_STATE:
     REWARD = "★"
 
 
+# エージェントが一度に保持できる報酬の最大値
 MAXIMUM_REWARD = 3
 
 # 障害物の情報を持つcsvファイルのパス

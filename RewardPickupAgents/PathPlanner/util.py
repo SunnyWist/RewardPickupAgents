@@ -1,9 +1,10 @@
+# Description: 経路計画プログラムに役立つ関数をまとめたモジュール
 import numpy as np
 import random
 from dataclasses import dataclass
 from typing import List, Dict, Union
 
-from ..World import Node, Environment
+from ..World import Node, Environment, World
 
 
 def get_adjacent_nodes(node: Node) -> List[Node]:
@@ -44,11 +45,11 @@ def get_euclidean_distance(node1: Node, node2: Node) -> float:
     return ((node1.x - node2.x) ** 2 + (node1.y - node2.y) ** 2) ** 0.5
 
 
-def get_astar_path(env: Environment, node1: Node, node2: Node) -> Union[List[Node], None]:
+def get_astar_path(world: World, node1: Node, node2: Node) -> Union[List[Node], None]:
     """2ノード間の最短経路を返す関数
 
     Args:
-        env (Environment): 障害物かどうかを表すバイナリ行列(障害物ならOBSTACLE, 通路ならPASS_POINT)
+        world (World): ワールドインスタンス
         node1 (Node): ノード1
         node2 (Node): ノード2
 
@@ -71,6 +72,8 @@ def get_astar_path(env: Environment, node1: Node, node2: Node) -> Union[List[Nod
 
         def __lt__(self, other):
             return self.get_f() < other.get_f()
+
+    env: Environment = world.environment
 
     if env.is_obstacle(node1) or env.is_obstacle(node2):
         return None
@@ -110,18 +113,18 @@ def get_astar_path(env: Environment, node1: Node, node2: Node) -> Union[List[Nod
     return None
 
 
-def get_astar_distance(env: Environment, node1: Node, node2: Node) -> int:
+def get_astar_distance(world: World, node1: Node, node2: Node) -> int:
     """2ノード間の最短距離をA*探索で計算する関数
 
     Args:
-        env (Environment): 障害物かどうかを表すバイナリ行列(障害物ならOBSTACLE, 通路ならPASS_POINT)
+        world (World): ワールドインスタンス
         node1 (Node): ノード1
         node2 (Node): ノード2
 
     Returns:
         int: 最短距離、経路が存在しない場合は-1
     """
-    path = get_astar_path(env, node1, node2)
+    path = get_astar_path(world, node1, node2)
     if path is None:
         return -1
     return len(path) - 1

@@ -79,6 +79,14 @@ class Agent:
         """
         return self.node
 
+    def get_owned_reward(self) -> int:
+        """エージェントが保有している報酬を取得するメソッド
+
+        Returns:
+            int: エージェントが保有している報酬
+        """
+        return self.owned_reward
+
 
 class StorePoint:
     """報酬を保管する場所を表すクラス
@@ -181,9 +189,9 @@ class World:
         self.store_points: List[StorePoint] = []
         self.store_points_count = 0
         self.reward_array: np.ndarray
-        self.load_maps(obstacle_file, reward_probability_file)
+        self.__load_maps(obstacle_file, reward_probability_file)
 
-    def load_maps(self, obstacle_file: str, reward_probability_file: str):
+    def __load_maps(self, obstacle_file: str, reward_probability_file: str):
         with open(obstacle_file, "r") as f:
             first_line = f.readline()
             width, height = map(int, first_line.strip().split(","))
@@ -222,7 +230,10 @@ class World:
         self.reward_array = np.zeros((width, height))
 
     def update_reward(self):
-        """確率に応じて報酬を生成するメソッド"""
+        """確率に応じて報酬を生成するメソッド
+
+        **経路計画プログラムでの利用はしてはいけない**
+        """
         for r in range(self.environment.width):
             for c in range(self.environment.height):
                 node = Node(r, c)
@@ -234,12 +245,90 @@ class World:
                     self.reward_array[r, c] = 1
 
     def earn_reward(self, agent: Agent) -> int:
+        """エージェントが報酬を獲得するメソッド
+
+        **経路計画プログラムでの利用はしてはいけない**
+        """
+
         reward = self.reward_array[agent.get_node().x, agent.get_node().y]
         if agent.get_maximum_reward() - agent.owned_reward < reward:
             reward = agent.get_maximum_reward() - agent.owned_reward
         agent.owned_reward += reward
         self.reward_array[agent.get_node().x, agent.get_node().y] -= reward
         return reward
+
+    def get_environment_size(self) -> tuple[int, int]:
+        """環境の横幅と縦幅を取得するメソッド
+
+        Returns:
+            tuple[int, int]: 環境の横幅と縦幅
+        """
+        return self.environment.get_environment_size()
+
+    def is_obstacle(self, node: Node) -> bool:
+        """指定したノードが障害物かどうかを判定するメソッド
+
+        Args:
+            node (Node): 判定するノード
+
+        Returns:
+            bool: 指定したノードが障害物の場合はTrue, それ以外はFalse
+        """
+        return self.environment.is_obstacle(node)
+
+    def is_in_environment(self, node: Node) -> bool:
+        """指定したノードが環境内にあるかどうかを判定するメソッド
+
+        Args:
+            node (Node): 判定するノード
+
+        Returns:
+            bool: 指定したノードが環境内にある場合はTrue, それ以外はFalse
+        """
+        return self.environment.is_in_environment(node)
+
+    def check_valid_node(self, node: Node) -> bool:
+        """指定したノードが有効であるか(環境内にあり、障害物でない)を判定するメソッド
+
+        Args:
+            node (Node): 判定するノード
+
+        Returns:
+            bool: 指定したノードが環境内にあり、障害物でない場合はTrue, それ以外はFalse
+        """
+        return self.environment.check_valid_node(node)
+
+    def get_agents_list(self) -> List[Agent]:
+        """エージェントのリストを取得するメソッド
+
+        Returns:
+            List[Agent]: エージェントのリスト
+        """
+        return self.agents
+
+    def get_agents_count(self) -> int:
+        """エージェントの総数を取得するメソッド
+
+        Returns:
+            int: エージェントの総数
+        """
+        return self.agents_count
+
+    def get_store_points_list(self) -> List[StorePoint]:
+        """報酬を保管する場所のリストを取得するメソッド
+
+        Returns:
+            List[StorePoint]: 報酬を保管する場所のリスト
+        """
+        return self.store_points
+
+    def get_store_points_count(self) -> int:
+        """報酬を保管する場所の総数を取得するメソッド
+
+        Returns:
+            int: 報酬を保管する場所の総数
+        """
+        return self.store_points_count
 
     def get_agent_with_node(self, node: Node) -> Union[Agent, None]:
         """指定したノードにいるエージェントを取得するメソッド
