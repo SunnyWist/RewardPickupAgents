@@ -2,7 +2,7 @@
 import numpy as np
 import random
 from dataclasses import dataclass
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Tuple
 
 from ..World import Node, Agent, World
 from .PathPlannerAbstract import PathPlannerAbstract
@@ -15,7 +15,7 @@ class RandomWalk(PathPlannerAbstract):
 
     def get_next_actions_for_agents(self, world: World) -> Dict[int, Node]:
         return_dict: Dict[int, Node] = {}  # agent_id: Node
-        agents = world.get_agents_list()
+        agents = world.get_agents()
         for agent in agents:
             # エージェントが取れる行動を取得
             valid_actions = world.get_valid_next_actions_for_agents(agent)

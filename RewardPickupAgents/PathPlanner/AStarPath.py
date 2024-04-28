@@ -5,7 +5,7 @@
 import numpy as np
 import random
 from dataclasses import dataclass
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Tuple
 
 from ..World import Node, Agent, World
 from .PathPlannerAbstract import PathPlannerAbstract
@@ -20,7 +20,7 @@ class AStarPath(PathPlannerAbstract):
     def get_next_actions_for_agents(self, world: World) -> Dict[int, Node]:
         return_dict: Dict[int, Node] = {}  # get_id(): Node
 
-        agents = world.get_agents_list()
+        agents = world.get_agents()
 
         # エージェントが向かうノードを格納するdictを初期化
         if len(self.agent_forward_nodes) == 0:
@@ -38,13 +38,13 @@ class AStarPath(PathPlannerAbstract):
         # そうでない場合は最寄りの報酬のあるノードに向かう
         for agent in agents:
             if self.agent_forward_nodes[agent.get_id()] is None:
-                if agent.get_owned_reward() == agent.get_maximum_reward():
-                    store_points = world.store_points
+                if agent.get_owned_rewards() == agent.get_maximum_rewards_capacity():
+                    store_points = world.vaults
                     store_point_nodes = [store_point.node for store_point in store_points]
                     store_point_nodes.sort
                     self.agent_forward_nodes[agent.get_id()] = store_point_nodes[0]
                 else:
-                    nearest_reward_node = world.get_nearest_reward_node(agent.get_node())
+                    nearest_reward_node = world.get_nearest_node_has_reward(agent.get_node())
                     self.agent_forward_nodes[agent.get_id()] = nearest_reward_node
 
         # それぞれのエージェントに対してA*探索を行い、次の行動を選択

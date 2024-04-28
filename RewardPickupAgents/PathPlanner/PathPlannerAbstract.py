@@ -1,7 +1,7 @@
 import numpy as np
 import random
 from dataclasses import dataclass
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Tuple
 from abc import ABCMeta, abstractmethod
 
 from ..World import Node, Agent, World
@@ -31,4 +31,4 @@ class PathPlannerAbstract(metaclass=ABCMeta):
         Returns:
             Dict[int, Node]: エージェントIDをキーとしてエージェントが次に起こす行動(Node)を値とするDict
         """
-        raise NotImplementedError("get_next_actionsメソッドを実装してください")
+        raise NotImplementedError("get_next_actions_for_agentsメソッドを実装してください")

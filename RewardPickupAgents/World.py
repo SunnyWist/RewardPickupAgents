@@ -1,7 +1,7 @@
 import numpy as np
 import random
 from dataclasses import dataclass
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Tuple
 
 from .parameter import *
 
@@ -63,7 +63,7 @@ class Agent:
         """
         return self.agent_id
 
-    def get_maximum_reward(self) -> int:
+    def get_maximum_rewards_capacity(self) -> int:
         """エージェントが運べる最大の報酬を取得するメソッド
 
         Returns:
@@ -79,7 +79,7 @@ class Agent:
         """
         return self.node
 
-    def get_owned_reward(self) -> int:
+    def get_owned_rewards(self) -> int:
         """エージェントが保有している報酬を取得するメソッド
 
         Returns:
@@ -88,40 +88,40 @@ class Agent:
         return self.owned_reward
 
 
-class StorePoint:
-    """報酬を保管する場所を表すクラス
+class Vault:
+    """報酬の保管庫を表すクラス
 
     Args:
-        node (Node): 報酬を保管する場所の位置
+        node (Node): 報酬の保管庫の位置
     """
 
     def __init__(self, node: Node):
         self.node = node
-        self.stored_reward = 0
+        self.stored_rewards = 0
 
-    def store_reward(self, reward: int):
-        """報酬を保管するメソッド
+    def store_rewards(self, rewards: int):
+        """報酬を保管庫に格納するメソッド
 
         Args:
-            reward (int): 保管する報酬
+            rewards (int): 保管する報酬
         """
-        self.stored_reward += reward
+        self.stored_rewards += rewards
 
     def get_node(self) -> Node:
-        """報酬を保管する場所の位置を取得するメソッド
+        """保管庫のノードを取得するメソッド
 
         Returns:
             Node: 報酬を保管する場所の位置
         """
         return self.node
 
-    def get_stored_reward(self) -> int:
+    def get_stored_rewards(self) -> int:
         """保管されている報酬を取得するメソッド
 
         Returns:
             int: 保管されている報酬
         """
-        return self.stored_reward
+        return self.stored_rewards
 
 
 class Environment:
@@ -203,8 +203,8 @@ class World:
         self.environment: Environment
         self.agents: List[Agent] = []
         self.agents_count = 0
-        self.store_points: List[StorePoint] = []
-        self.store_points_count = 0
+        self.vaults: List[Vault] = []
+        self.vaults_count = 0
         self.reward_array: np.ndarray
         self.__load_maps(obstacle_file, reward_probability_file)
 
@@ -223,11 +223,11 @@ class World:
                     elif value == MAP_STATE.PASS_POINT:
                         obstacle_array[i, j] = 0
                     elif value == MAP_STATE.AGENT:
-                        self.agents.append(Agent(self.agents_count, MAXIMUM_REWARD, Node(i, j)))
+                        self.agents.append(Agent(self.agents_count, MAXIMUM_REWARDS_CAPACITY, Node(i, j)))
                         self.agents_count += 1
-                    elif value == MAP_STATE.STORE_POINT:
-                        self.store_points.append(StorePoint(Node(i, j)))
-                        self.store_points_count += 1
+                    elif value == MAP_STATE.VAULT:
+                        self.vaults.append(Vault(Node(i, j)))
+                        self.vaults_count += 1
                     else:
                         raise ValueError("Invalid value in the map")
             self.environment.set_obstacle_array(obstacle_array)
@@ -247,9 +247,9 @@ class World:
         self.reward_array = np.zeros((width, height))
 
     def update_reward(self):
-        """確率に応じて報酬を生成するメソッド
+        """確率に応じてノードに報酬を生成するメソッド
 
-        **経路計画プログラムでの利用はしてはいけない**
+        !!経路計画プログラムでの利用はしてはいけない
         """
         for r in range(self.environment.width):
             for c in range(self.environment.height):
@@ -264,21 +264,21 @@ class World:
     def earn_reward(self, agent: Agent) -> int:
         """エージェントが報酬を獲得するメソッド
 
-        **経路計画プログラムでの利用はしてはいけない**
+        !!経路計画プログラムでの利用はしてはいけない
         """
 
         reward = self.reward_array[agent.get_node().x, agent.get_node().y]
-        if agent.get_maximum_reward() - agent.owned_reward < reward:
-            reward = agent.get_maximum_reward() - agent.owned_reward
+        if agent.get_maximum_rewards_capacity() - agent.owned_reward < reward:
+            reward = agent.get_maximum_rewards_capacity() - agent.owned_reward
         agent.owned_reward += reward
         self.reward_array[agent.get_node().x, agent.get_node().y] -= reward
         return reward
 
-    def get_environment_size(self) -> tuple[int, int]:
+    def get_environment_size(self) -> Tuple[int, int]:
         """環境の横幅と縦幅を取得するメソッド
 
         Returns:
-            tuple[int, int]: 環境の横幅と縦幅
+            Tuple[int, int]: 環境の横幅と縦幅
         """
         return self.environment.get_environment_size()
 
@@ -315,7 +315,7 @@ class World:
         """
         return self.environment.is_valid_node(node)
 
-    def get_agents_list(self) -> List[Agent]:
+    def get_agents(self) -> List[Agent]:
         """エージェントのリストを取得するメソッド
 
         Returns:
@@ -331,21 +331,21 @@ class World:
         """
         return self.agents_count
 
-    def get_store_points_list(self) -> List[StorePoint]:
-        """報酬を保管する場所のリストを取得するメソッド
+    def get_vaults(self) -> List[Vault]:
+        """保管庫のリストを取得するメソッド
 
         Returns:
-            List[StorePoint]: 報酬を保管する場所のリスト
+            List[Vault]: 保管庫のリスト
         """
-        return self.store_points
+        return self.vaults
 
-    def get_store_points_count(self) -> int:
-        """報酬を保管する場所の総数を取得するメソッド
+    def get_vaults_count(self) -> int:
+        """保管庫の総数を取得するメソッド
 
         Returns:
-            int: 報酬を保管する場所の総数
+            int: 保管庫の総数
         """
-        return self.store_points_count
+        return self.vaults_count
 
     def get_agent_with_node(self, node: Node) -> Union[Agent, None]:
         """指定したノードにいるエージェントを取得するメソッド
@@ -361,18 +361,18 @@ class World:
                 return agent
         return None
 
-    def get_store_point_with_node(self, node: Node) -> Union[StorePoint, None]:
-        """指定したノードにある報酬を保管する場所を取得するメソッド
+    def get_vault_with_node(self, node: Node) -> Union[Vault, None]:
+        """指定したノード上の保管庫を取得するメソッド
 
         Args:
             node (Node): 対象となるノード
 
         Returns:
-            Union[StorePoint, None]: 指定したノードにある報酬を保管する場所が存在する場合はその場所, それ以外はNone
+            Union[Vault, None]: 指定したノードに保管庫が存在する場合はその保管庫, それ以外はNone
         """
-        for store_point in self.store_points:
-            if store_point.get_node() == node:
-                return store_point
+        for vault in self.vaults:
+            if vault.get_node() == node:
+                return vault
         return None
 
     def get_reward_array(self) -> np.ndarray:
@@ -394,7 +394,7 @@ class World:
         """
         return self.reward_array[node.x, node.y] > 0
 
-    def get_nearest_reward_node(self, node: Node) -> Union[Node, None]:
+    def get_nearest_node_has_reward(self, node: Node) -> Union[Node, None]:
         """指定したノードに最も近い報酬があるノードを取得するメソッド
 
         Args:
@@ -462,15 +462,15 @@ class World:
             for c in range(height):
                 print_str = ""
                 agent = self.get_agent_with_node(Node(r, c))
-                store_point = self.get_store_point_with_node(Node(r, c))
+                vault = self.get_vault_with_node(Node(r, c))
                 color_start_str = ""
                 color_end_str = ""
                 if agent:
                     print_str = MAP_STATE.AGENT
                     color_start_str = "\033[32m"
                     color_end_str = "\033[0m"
-                elif store_point:
-                    print_str = MAP_STATE.STORE_POINT
+                elif vault:
+                    print_str = MAP_STATE.VAULT
                     color_start_str = "\033[34m"
                     color_end_str = "\033[0m"
                 elif self.environment.is_obstacle(Node(r, c)):

@@ -22,14 +22,14 @@ def main():
     next_nodes_selector = PathPlanner()
 
     step: int = 0
-    agents_owned_reward: int = 0
-    stored_reward: int = 0
+    agents_owned_rewards: int = 0
+    stored_rewards: int = 0
     collision_count: int = 0
 
     AGENTS_COUNT = world.get_agents_count()
     ACTIONS_LIST = [Node(0, 1), Node(0, -1), Node(1, 0), Node(-1, 0), Node(0, 0)]
 
-    while step < MAX_TIMESTEP:
+    while step < SIMULATION_TIMESTEP:
         # 報酬を出現させる
         world.update_reward()
         # エージェントの移動
@@ -59,27 +59,27 @@ def main():
 
         # 報酬の保管
         for agent in world.agents:
-            store_point = world.get_store_point_with_node(agent.get_node())
-            if store_point:
-                store_point.store_reward(agent.owned_reward)
+            vault = world.get_vault_with_node(agent.get_node())
+            if vault:
+                vault.store_rewards(agent.owned_reward)
                 agent.owned_reward = 0
 
         # 後処理
         step += 1
-        agents_owned_reward = sum([agent.owned_reward for agent in world.agents])
-        stored_reward = sum([store_point.stored_reward for store_point in world.store_points])
+        agents_owned_rewards = sum([agent.owned_reward for agent in world.agents])
+        stored_rewards = sum([vault.stored_rewards for vault in world.vaults])
 
         if PRINT_MAP_IN_TEMINAL:
             print("Step", step)
-            print("Agents Owned Reward", agents_owned_reward)
-            print("Stored Reward", stored_reward)
+            print("Agents Owned Reward", agents_owned_rewards)
+            print("Stored Reward", stored_rewards)
             print("Collision Count", collision_count)
             world.print_map_state()
             sleep(1)
 
     print("Final Step", step)
-    print("Final Agents Owned Reward", agents_owned_reward)
-    print("Final Stored Reward", stored_reward)
+    print("Final Agents Owned Reward", agents_owned_rewards)
+    print("Final Stored Reward", stored_rewards)
     print("Final Collision Count", collision_count)
 
 
