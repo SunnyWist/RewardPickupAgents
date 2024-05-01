@@ -166,4 +166,4 @@ cython_debug/
 GIFs/*
 
 # For macOS users
-.DS_Store
+*/.DS_Store

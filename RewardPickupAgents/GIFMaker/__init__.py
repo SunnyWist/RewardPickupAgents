@@ -21,6 +21,8 @@ class GIFMaker:
         x = np.arange(obstacle_data.shape[1])
         y = np.arange(obstacle_data.shape[0])
         self.X_array, self.Y_array = np.meshgrid(x, y)
+        ax.xaxis.tick_top()
+        ax.invert_yaxis()
 
     def update(
         self, step: int, score: int, reward_data: np.ndarray, agents: Dict[int, List[int]], vaults: Dict[int, List[int]]
@@ -77,7 +79,7 @@ class GIFMaker:
         ax_list.append(
             ax.text(
                 0.5,
-                1.05,
+                1.1,
                 "Step: {}, Score: {}".format(step, score),
                 fontsize=20,
                 transform=ax.transAxes,
