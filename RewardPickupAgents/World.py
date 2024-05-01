@@ -147,6 +147,14 @@ class Environment:
         """
         return self.width, self.height
 
+    def get_obstacle_data(self) -> np.ndarray:
+        """障害物のデータを取得するメソッド
+
+        Returns:
+            np.ndarray: 障害物のデータ
+        """
+        return self.obstacle_array
+
     def is_obstacle(self, node: Node) -> bool:
         """指定したノードが障害物かどうかを判定するメソッド
 
@@ -199,19 +207,17 @@ class Environment:
 class World:
     """エージェントと報酬の保管庫の情報、および環境の状況を保持するクラス"""
 
-    def __init__(self, obstacle_file: str, reward_probability_file: str):
+    def __init__(self, width: int, height: int, obstacle_file: str, reward_probability_file: str):
         self.environment: Environment
         self.agents: List[Agent] = []
         self.agents_count = 0
         self.vaults: List[Vault] = []
         self.vaults_count = 0
         self.reward_array: np.ndarray
-        self.__load_maps(obstacle_file, reward_probability_file)
+        self.__load_maps(width, height, obstacle_file, reward_probability_file)
 
-    def __load_maps(self, obstacle_file: str, reward_probability_file: str):
+    def __load_maps(self, width: int, height: int, obstacle_file: str, reward_probability_file: str):
         with open(obstacle_file, "r") as f:
-            first_line = f.readline()
-            width, height = map(int, first_line.strip().split(","))
             self.environment = Environment(width, height)
             obstacle_array = np.zeros((width, height))
             for i in range(width):
@@ -229,14 +235,10 @@ class World:
                         self.vaults.append(Vault(Node(i, j)))
                         self.vaults_count += 1
                     else:
-                        raise ValueError("Invalid value in the map")
+                        raise ValueError("Invalid value in the map. ", value)
             self.environment.set_obstacle_array(obstacle_array)
 
         with open(reward_probability_file, "r") as f:
-            first_line = f.readline()
-            width, height = map(int, first_line.strip().split(","))
-            if width != self.environment.width or height != self.environment.height:
-                raise ValueError("Map size is different")
             reward_probability_array = np.zeros((width, height))
             for i in range(width):
                 line = f.readline()
@@ -281,6 +283,14 @@ class World:
             Tuple[int, int]: 環境の横幅と縦幅
         """
         return self.environment.get_environment_size()
+
+    def get_obstacle_data(self) -> np.ndarray:
+        """障害物のデータを取得するメソッド
+
+        Returns:
+            np.ndarray: 障害物のデータ
+        """
+        return self.environment.get_obstacle_data()
 
     def is_obstacle(self, node: Node) -> bool:
         """指定したノードが障害物かどうかを判定するメソッド
@@ -393,6 +403,30 @@ class World:
             bool: 指定したノードに報酬がある場合はTrue, それ以外はFalse
         """
         return self.reward_array[node.x, node.y] > 0
+
+    def get_agents_pos_dict(self) -> Dict[int, List[int]]:
+        """エージェントの位置情報を辞書形式で取得するメソッド
+
+        Returns:
+            Dict[int, List[int]]: エージェントの位置情報
+        """
+        agent_pos_dict: Dict[int, List[int]] = {}
+        for agent in self.agents:
+            agent_pos_dict[agent.get_id()] = [agent.get_node().x, agent.get_node().y]
+        return agent_pos_dict
+
+    def get_vaults_pos_dict(self) -> Dict[int, List[int]]:
+        """保管庫の位置情報を辞書形式で取得するメソッド
+
+        Returns:
+            Dict[int, List[int]]: 保管庫の位置情報
+        """
+        goals_pos_dict: Dict[int, List[int]] = {}
+        count: int = 0
+        for vault in self.vaults:
+            goals_pos_dict[count] = [vault.get_node().x, vault.get_node().y]
+            count += 1
+        return goals_pos_dict
 
     def get_nearest_node_has_reward(self, node: Node) -> Union[Node, None]:
         """指定したノードに最も近い報酬があるノードを取得するメソッド

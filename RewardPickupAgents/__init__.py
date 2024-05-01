@@ -7,6 +7,7 @@ from time import sleep
 
 from .World import World, Node
 from .parameter import *
+from .GIFMaker import GIFMaker
 
 """ 以下を変更してください """
 from .PathPlanner.RandomWalk import RandomWalk as PathPlanner
@@ -15,8 +16,8 @@ from .PathPlanner.RandomWalk import RandomWalk as PathPlanner
 
 
 def main():
-    world = World(OBSTACLE_CSV_FILE_PATH, REWARD_CSV_FILE_PATH)
-    print("(width, height) = ", world.environment.get_environment_size())
+    world = World(MAP_WIDTH, MAP_HEIGHT, OBSTACLE_CSV_FILE_PATH, REWARD_CSV_FILE_PATH)
+    print("(width, height) = ", world.get_environment_size())
     if PRINT_MAP_IN_TEMINAL:
         world.print_map_state()
     next_nodes_selector = PathPlanner()
@@ -25,6 +26,11 @@ def main():
     agents_owned_rewards: int = 0
     stored_rewards: int = 0
     collision_count: int = 0
+    if CREATE_GIF:
+        gif_maker = GIFMaker(world.get_obstacle_data(), world.get_agents_count(), world.get_vaults_count())
+        gif_maker.update(
+            step, stored_rewards, world.get_reward_array(), world.get_agents_pos_dict(), world.get_vaults_pos_dict()
+        )
 
     AGENTS_COUNT = world.get_agents_count()
     ACTIONS_LIST = [Node(0, 1), Node(0, -1), Node(1, 0), Node(-1, 0), Node(0, 0)]
@@ -68,6 +74,10 @@ def main():
         step += 1
         agents_owned_rewards = sum([agent.owned_reward for agent in world.agents])
         stored_rewards = sum([vault.stored_rewards for vault in world.vaults])
+        if CREATE_GIF:
+            gif_maker.update(
+                step, stored_rewards, world.get_reward_array(), world.get_agents_pos_dict(), world.get_vaults_pos_dict()
+            )
 
         if PRINT_MAP_IN_TEMINAL:
             print("Step", step)
@@ -81,6 +91,8 @@ def main():
     print("Final Agents Owned Reward", agents_owned_rewards)
     print("Final Stored Reward", stored_rewards)
     print("Final Collision Count", collision_count)
+    if CREATE_GIF:
+        gif_maker.save_gif(GIF_SAVE_PATH)
 
 
 if __name__ == "__main__":

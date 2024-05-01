@@ -48,6 +48,11 @@
     - `RewardPickupAgents/parameter.py`上のパラメータを変更することで、実行時の設定を変更できる。
         - シミュレーションを行うステップ数: `SIMULATION_TIMESTEP`
         - ターミナルにマップを表示するかどうか: `PRINT_MAP_IN_TEMINAL`
+        - GIFアニメーションを作成するかどうか: `CREATE_GIF = True`
+- また、`python3 randomize.py`を実行することで、報酬の出現確率をランダム化することができる。
+    - 出力したcsvファイルを`RewardPickupAgents/parameter.py`上の`REWARD_CSV_FILE_PATH`に指定することで、その確率に従って報酬が出現する。
+    - 詳しい設定は`randomize.py`を参照。
+
 
 ## 5. 評価
 - エージェント全体が保管庫まで運んだ報酬の数を評価する。

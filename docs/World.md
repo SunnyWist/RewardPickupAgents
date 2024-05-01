@@ -7,6 +7,15 @@
     - Returns(戻り値):
         - `Tuple[int, int]`: 環境の横幅と縦幅
 
+- `get_obstacle_data`メソッド
+    ```python
+    def get_obstacle_data(self) -> np.ndarray:
+    ```
+
+    - 障害物のデータを取得するメソッド
+    - Returns(戻り値):
+        - `np.ndarray`: 障害物のデータ
+
 - `is_obstacle`メソッド
     ```python
     def is_obstacle(self, node: Node) -> bool:
@@ -118,6 +127,24 @@
         - `node (Node)`: 判定するノード
     - Returns(戻り値):
         - `bool`: 指定したノードに報酬がある場合は`True`, それ以外は`False`
+
+- `get_agents_pos_dict`メソッド
+    ```python
+    def get_agents_pos_dict(self) -> Dict[int, List[int]]:
+    ```
+    
+    - エージェントの位置情報を辞書形式で取得するメソッド
+    - Returns(戻り値):
+        - `Dict[int, List[int]]`: エージェントの位置情報
+
+- `get_vaults_pos_dict`メソッド
+    ```python
+    def get_vaults_pos_dict(self) -> Dict[int, List[int]]:
+    ```
+
+    - 保管庫の位置情報を辞書形式で取得するメソッド
+    - Returns(戻り値):
+        - `Dict[int, List[int]]`: 保管庫の位置情報
 
 - `get_nearest_node_has_reward`メソッド
     ```python

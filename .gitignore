@@ -161,3 +161,9 @@ cython_debug/
 
 # For VSCode users
 .vscode/
+
+# Personal Settings
+GIFs/*
+
+# For macOS users
+.DS_Store
